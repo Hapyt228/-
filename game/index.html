@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра: Корабль пришельцев</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('images/walls/space-ship-wall-texture.jpg'); /* Текстура стен */
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            justify-content: flex-end; /* Пол с низу экрана */
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 90%;
+            overflow: hidden;
+        }
+        #instructions {
+            margin: 20px;
+            font-size: 18px;
+            text-align: center;
+            color: #fff;
+        }
+        #output {
+            width: 80%;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(51, 51, 51, 0.8);
+            border-radius: 5px;
+            font-size: 16px;
+            white-space: pre-wrap;
+        }
+
+        /* Стиль для отображения корабля */
+        #ship-map {
+            display: grid;
+            grid-template-columns: repeat(7, 100px); /* 7 колонок */
+            grid-template-rows: repeat(3, 100px); /* 3 ряда */
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .room {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            background-image: url('images/floor/floor-texture.jpg'); /* Текстура пола */
+            background-size: cover;
+        }
+        
+        .room .floor {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            z-index: 0; /* Пол будет на фоне */
+        }
+        .room .player {
+            width: 80px;
+            height: 80px;
+            background-image: url('images/human/human-texture.jpg'); /* Текстура персонажа */
+            background-size: cover;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2; /* Персонаж будет поверх пола */
+        }
+        .room .enemy {
+            width: 80px;
+            height: 80px;
+            background-image: url('images/alien/alien-texture.jpg'); /* Текстура врага */
+            background-size: cover;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2; /* Враг будет поверх пола */
+        }
+        .room .ladder {
+            width: 100%;
+            height: 100%;
+            background-image: url('images/ladder/ladder-texture.jpg'); /* Текстура лестницы */
+            background-size: cover;
+            position: absolute;
+            z-index: 1; /* Лестница под врагом и персонажем */
+        }
+        .room .note {
+            width: 80px;
+            height: 80px;
+            background-image: url('images/note/note-texture.jpg'); /* Текстура записки */
+            background-size: cover;
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            transform: translate(-50%, -50%);
+            z-index: 2; /* Записка будет выше пола и лестницы */
+        }
+
+        .note-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.5;
+            visibility: hidden; /* Текст будет скрыт изначально */
+        }
+
+        /* Стиль для кнопок "Да" и "Нет" */
+        #restart-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        #restart-buttons button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #restart-buttons button:hover {
+            background-color: #555;
+        }
+          /* Стиль для доступных клеток */
+    
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Игра: Корабль пришельцев</h1>
+        <div id="instructions">
+            Добро пожаловать на борт. Ваша цель — выбраться с корабля пришельцев, используя подсказки о вашем местоположении.
+            Используйте стрелочки для перемещения по кораблю. Стрелка вниз — спуститься на нижний этаж, стрелка вверх — подняться на верхний этаж.
+        </div>
+        <div id="output">
+            Стартовая точка: Вы находитесь в комнате с черными стенами. Солнце не проникает внутрь.
+            По игровому полю оставлены записки которые помогут вам выбраться 
+        </div>
+
+        <!-- Карта корабля -->
+        <div id="ship-map">
+            <!-- Каждая комната -->
+            <div class="room" id="room1"></div>
+            <div class="room" id="room2"></div>
+            <div class="room" id="room3"></div>
+            <div class="room" id="room4"></div>
+            <div class="room" id="room5"></div>
+            <div class="room" id="room6"></div>
+            <div class="room" id="room7"></div>
+            <div class="room" id="room8"></div>
+            <div class="room" id="room9"></div>
+            <div class="room" id="room10"></div>
+            <div class="room" id="room11"></div>
+            <div class="room" id="room12"></div>
+            <div class="room" id="room13"></div>
+            <div class="room" id="room14"></div>
+            <div class="room" id="room15"></div>
+            <div class="room" id="room16"></div>
+            <div class="room" id="room17"></div>
+            <div class="room" id="room18"></div>
+            <div class="room" id="room19"></div>
+            <div class="room" id="room20"></div>
+            <div class="room" id="room21"></div>
+        </div>
+
+        <!-- Кнопки для перезапуска или выхода -->
+        <div id="restart-buttons" style="display: none;">
+            <button onclick="restartGame()">Да</button>
+            <button onclick="endGame()">Нет</button>
+        </div>
+    </div>
+
+    <script>
+        // Переменные состояния игры
+        let currentStep = 0;
+        let currentRoom = Math.floor(Math.random() * 21); // Персонаж спавнится случайно
+        let enemyRoom = Math.floor(Math.random() * 21); // Враг спавнится случайно
+        let gameOver = false;
+        const totalRooms = 21; // Количество комнат для 7x3 сетки
+        let ladderRoom = Math.floor(Math.random() * totalRooms); // Случайная комната для лестницы
+        let noteRoom = getRandomRoomForNote(); // Случайная комната для записки, но не с лестницей
+        const noteText = "Привет, я тоже пытался выбраться с этого корабля. Корабль имеет три этажа на последнем этаже есть дверь, чтобы ее открыть тебе надо найти ключ, но будь осторожен на каждом этаже ходят охранники, а на последнем этаже у них пост охраны тебе надо не заметно пробраться через них.";
+        const gameOverText = "Вы столкнулись с врагом! Игра окончена.";
+
+        // Логика для отображения движения по кораблю
+        const route = [
+            { direction: 'вперед', steps: 50 },
+            { direction: 'вправо', steps: 52 },
+            { direction: 'вперед', steps: 18 },
+            { direction: 'влево', steps: 18 },
+            { direction: 'вперед', steps: 50 },
+            { direction: 'вверх', steps: 2 },
+            { direction: 'вперед', steps: 48 },
+            { direction: 'вперед', steps: 12 },
+            { direction: 'вверх', steps: 2 }
+        ];
+
+        // Разделение карты на этажи (ряда)
+        const rows = [
+            [0, 1, 2, 3, 4, 5, 6],
+            [7, 8, 9, 10, 11, 12, 13],
+            [14, 15, 16, 17, 18, 19, 20]
+        ];
+
+
+
+         // Функция для обновления положения игрока и отображения доступных клеток
+    function updatePosition() {
+        const roomElements = document.querySelectorAll('.room');
+        roomElements.forEach((room, index) => {
+            room.innerHTML = ''; // Очистить все комнаты
+
+            // Определяем, доступна ли клетка для игрока
+            if (isAccessible(index)) {
+                room.classList.add('available');
+                room.classList.remove('unavailable');
+            } else {
+                room.classList.add('unavailable');
+                room.classList.remove('available');
+            }
+        });
+
+        // Поместить персонажа в текущую комнату
+        roomElements[currentRoom].innerHTML += '<div class="player"></div>';
+
+        // Поместить врага в его комнату
+        roomElements[enemyRoom].innerHTML += '<div class="enemy"></div>';
+
+        // Поместить лестницу в её комнату
+        roomElements[ladderRoom].innerHTML += '<div class="ladder"></div>';
+
+        // Добавить случайную записку в случайную комнату
+        roomElements[noteRoom].innerHTML += '<div class="note"><div class="note-text">' + noteText + '</div></div>';
+    }
+
+    // Функция для проверки доступности клетки (можно ли на неё переместиться)
+    function isAccessible(roomIndex) {
+        // Получаем текущие координаты игрока
+        const row = Math.floor(currentRoom / 7); // Определяем строку (этаж)
+        const col = currentRoom % 7; // Определяем колонку
+
+        // Проверяем доступность клеток по соседям (лево, право, вверх, вниз)
+        // Лево (col > 0), Право (col < 6), Вверх (row > 0), Вниз (row < 2)
+        if (roomIndex === currentRoom - 1 && col > 0) return true; // Лево
+        if (roomIndex === currentRoom + 1 && col < 6) return true; // Право
+        if (roomIndex === currentRoom - 7 && row > 0) return true; // Вверх
+        if (roomIndex === currentRoom + 7 && row < 2) return true; // Вниз
+        return false; // Если не соседняя клетка, то недоступно
+    }
+
+
+
+
+
+
+
+        // Обработчик нажатия стрелочек и Enter
+        document.addEventListener('keydown', function(e) {
+            if (gameOver) return;
+
+            switch(e.key) {
+                case "ArrowUp":
+                    moveUp();
+                    break;
+                case "ArrowDown":
+                    moveDown();
+                    break;
+                case "ArrowLeft":
+                    moveLeft();
+                    break;
+                case "ArrowRight":
+                    moveRight();
+                    break;
+                case "Enter":
+                    showNote();
+                    break;
+            }
+
+            // После хода игрока, враг делает свой ход
+            if (!gameOver) {
+                enemyMove();
+            }
+
+            // После хода врага, проверим столкновение
+            if (currentRoom === enemyRoom) {
+                gameOver = true;
+                document.getElementById("output").textContent = gameOverText + " Хотите попробовать снова?";
+                document.getElementById("restart-buttons").style.display = "flex"; // Показываем кнопки
+            }
+        });
+
+        // Функция для получения случайной комнаты для записки, исключая комнату с лестницей
+        function getRandomRoomForNote() {
+            let noteRoom;
+            do {
+                noteRoom = Math.floor(Math.random() * totalRooms);
+            } while (noteRoom === ladderRoom); // Убедиться, что комната не та же, что и для лестницы
+            return noteRoom;
+        }
+
+        // Функция для движения игрока вверх
+           function moveUp() {
+        if (currentRoom >= 7 && isAccessible(currentRoom - 7)) {
+            currentRoom -= 7;
+            updatePosition();
+        } else {
+            document.getElementById("output").textContent = "Здесь стена, попробуйте двигаться в другом направлении.";
+        }
+    }
+
+    function moveDown() {
+        if (currentRoom <= 13 && isAccessible(currentRoom + 7)) {
+            currentRoom += 7;
+            updatePosition();
+        } else {
+            document.getElementById("output").textContent = "Здесь стена, попробуйте двигаться в другом направлении.";
+        }
+    }
+
+    function moveLeft() {
+        if (currentRoom % 7 !== 0 && isAccessible(currentRoom - 1)) {
+            currentRoom -= 1;
+            updatePosition();
+        } else {
+            document.getElementById("output").textContent = "Здесь стена, попробуйте двигаться в другом направлении.";
+        }
+    }
+
+    function moveRight() {
+        if (currentRoom % 7 !== 6 && isAccessible(currentRoom + 1)) {
+            currentRoom += 1;
+            updatePosition();
+        } else {
+            document.getElementById("output").textContent = "Здесь стена, попробуйте двигаться в другом направлении.";
+        }
+    }
+
+        // Функция для обновления положения игрока и элементов игры
+        function updatePosition() {
+            const roomElements = document.querySelectorAll('.room');
+            roomElements.forEach(room => room.innerHTML = ''); // Очистить комнаты
+
+            // Поместить персонажа в текущую комнату
+            roomElements[currentRoom].innerHTML += '<div class="player"></div>';
+
+            // Поместить врага в его комнату
+            roomElements[enemyRoom].innerHTML += '<div class="enemy"></div>';
+
+            // Поместить лестницу в её комнату
+            roomElements[ladderRoom].innerHTML += '<div class="ladder"></div>';
+
+            // Добавить случайную записку в случайную комнату
+            roomElements[noteRoom].innerHTML += '<div class="note"><div class="note-text">' + noteText + '</div></div>';
+        }
+
+        // Функция для отображения текста записки (вызывается, когда игрок нажимает Enter)
+        function showNote() {
+            let roomElements = document.querySelectorAll('.room');
+            if (currentRoom === noteRoom) {
+                roomElements[noteRoom].querySelector('.note-text').style.visibility = "visible"; // Показываем текст записки
+                document.getElementById("output").textContent = noteText; // Отображаем текст в окне
+            }
+        }
+
+        // Функция для движения врага
+        function enemyMove() {
+            let moveDirection = Math.floor(Math.random() * 4);
+            switch(moveDirection) {
+                case 0: 
+                    if (enemyRoom < totalRooms - 7) enemyRoom += 7;
+                    break;
+                case 1: 
+                    if (enemyRoom > 6) enemyRoom -= 7;
+                    break;
+                case 2:
+                    if (enemyRoom % 7 !== 0) enemyRoom -= 1;
+                    break;
+                case 3:
+                    if (enemyRoom % 7 !== 6) enemyRoom += 1;
+                    break;
+            }
+            updatePosition();
+        }
+
+        // Функция для перезапуска игры
+        function restartGame() {
+            gameOver = false;
+            currentRoom = Math.floor(Math.random() * 21);
+            enemyRoom = Math.floor(Math.random() * 21);
+            ladderRoom = Math.floor(Math.random() * totalRooms);
+            noteRoom = getRandomRoomForNote();
+            document.getElementById("restart-buttons").style.display = "none";
+            updatePosition();
+            document.getElementById("output").textContent = "Начнем игру снова!";
+        }
+
+        // Функция для завершения игры
+        function endGame() {
+            gameOver = true;
+            document.getElementById("output").textContent = "Игра завершена. Спасибо за игру!";
+            document.getElementById("restart-buttons").style.display = "none";
+        }
+
+        // Инициализация игры
+        updatePosition();
+    </script>
+</body>
+</html>

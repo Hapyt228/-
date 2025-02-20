@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра: Корабль пришельцев</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="top-block"><h1>Игра: Корабль пришельцев</h1></div>
+    <div id="instructions">
+            Добро пожаловать на борт. Ваша цель — выбраться с корабля пришельцев, используя подсказки о вашем местоположении.
+            Используйте стрелочки для перемещения по кораблю. Стрелка вниз — спуститься на нижний этаж, стрелка вверх — подняться на верхний этаж.
+    </div>
+    <div class="middle-block" onclick="showFloors()">Нажми</div>
+    <div class="floors">
+        <div class="floor" onclick="location.href='этаж 1/index.html'">1 этаж</div>
+        <div class="floor" onclick="location.href='этаж 2/index.html'">2 этаж</div>
+        <div class="floor" onclick="location.href='этаж 3/index.html'">3 этаж</div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
